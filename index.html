@@ -1,75 +1,382 @@
+``html
 <!DOCTYPE html>
-      <div>
-        <h3 class="text-2xl font-black">Tu carrito</h3>
-        <p class="text-sm text-slate-500 mt-1">Resumen del pedido</p>
-      </div>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abisai Express - Tu Pedido al Instante</title>
+    <!-- Tailwind CSS para Estilos Modernos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Animaciones para transiciones fluidas */
+        .cart-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+        /* Ocultar barra de scroll pero mantener funcionalidad */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
-      <button id="closeCart" class="w-12 h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 transition">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
+    <!-- CABECERA DE LA APP -->
+    <header class="bg-white border-b border-slate-100 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showStoresView()">
+                <div class="w-10 h-10 bg-red-500 rounded-2xl flex items-center justify-center text-white shadow-md shadow-red-500/30">
+                    <i class="fa-solid fa-bolt text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-black text-xl tracking-tight text-slate-900">Rapidito</h1>
+                    <p class="text-[10px] text-slate-400 font-bold tracking-widest uppercase">Delivery Express</p>
+                </div>
+            </div>
+
+            <!-- Botón del Carrito en Cabecera (Mobile/Desktop) -->
+            <button id="openCart" class="relative bg-slate-100 hover:bg-slate-200 transition p-3 rounded-2xl flex items-center gap-2">
+                <i class="fa-solid fa-basket-shopping text-slate-700 text-lg"></i>
+                <span id="cartCountBadge" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white hidden">0</span>
+                <span class="hidden md:inline font-bold text-sm text-slate-700">Mi Carrito</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+        
+        <!-- SECCIÓN 1: CATEGORÍAS -->
+        <section id="categoriesSection" class="mb-8">
+            <h2 class="text-xs font-bold text-slate-400 tracking-wider uppercase mb-3">¿Qué necesitas hoy?</h2>
+            <div class="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                <button onclick="filterCategory('Todos')" class="category-btn active px-5 py-3 rounded-2xl bg-red-500 text-white font-bold text-sm flex items-center gap-2 whitespace-nowrap shadow-lg shadow-red-500/20 transition">
+                    <i class="fa-solid fa-border-all"></i> Todos
+                </button>
+                <button onclick="filterCategory('Restaurantes')" class="category-btn px-5 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 font-semibold text-sm flex items-center gap-2 whitespace-nowrap border border-slate-100 transition">
+                    <i class="fa-solid fa-utensils"></i> Restaurantes
+                </button>
+                <button onclick="filterCategory('Farmacias')" class="category-btn px-5 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 font-semibold text-sm flex items-center gap-2 whitespace-nowrap border border-slate-100 transition">
+                    <i class="fa-solid fa-capsules"></i> Farmacias
+                </button>
+                <button onclick="filterCategory('Supermercados')" class="category-btn px-5 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 font-semibold text-sm flex items-center gap-2 whitespace-nowrap border border-slate-100 transition">
+                    <i class="fa-solid fa-shop"></i> Supermercados
+                </button>
+                <button onclick="filterCategory('Postres')" class="category-btn px-5 py-3 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 font-semibold text-sm flex items-center gap-2 whitespace-nowrap border border-slate-100 transition">
+                    <i class="fa-solid fa-ice-cream"></i> Postres
+                </button>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: TIENDAS DISPONIBLES -->
+        <section id="storesView" class="block">
+            <h2 id="storesTitle" class="text-xl font-black text-slate-900 mb-4">Tiendas Destacadas</h2>
+            <div id="storesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Se inyecta dinámicamente con JS -->
+            </div>
+        </section>
+
+        <!-- SECCIÓN 3: DETALLE DE TIENDA Y PRODUCTOS -->
+        <section id="productsView" class="hidden">
+            <!-- Botón de retorno -->
+            <button onclick="showStoresView()" class="mb-6 flex items-center gap-2 text-slate-500 hover:text-slate-900 transition font-bold text-sm">
+                <i class="fa-solid fa-arrow-left"></i> Volver a tiendas
+            </button>
+            
+            <!-- Banner de Tienda -->
+            <div id="storeHeaderBanner" class="relative rounded-3xl overflow-hidden h-48 md:h-64 mb-8">
+                <img id="storeBannerImg" class="w-full h-full object-cover" src="" alt="Banner">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-8">
+                    <span id="storeTag" class="bg-red-500 text-white text-xs font-black uppercase px-3 py-1 rounded-full w-max mb-2">Categoría</span>
+                    <h2 id="storeHeaderName" class="text-2xl md:text-4xl font-black text-white">Nombre Tienda</h2>
+                    <div class="flex items-center gap-4 text-white/90 text-xs md:text-sm mt-2 font-semibold">
+                        <span><i class="fa-solid fa-star text-amber-400"></i> <span id="storeHeaderRating">4.9</span></span>
+                        <span><i class="fa-solid fa-clock text-red-400"></i> <span id="storeHeaderTime">20 min</span></span>
+                        <span><i class="fa-solid fa-truck text-emerald-400"></i> Envío $2.50</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Listado de Productos -->
+            <h3 class="text-xl font-black text-slate-900 mb-6">Productos Disponibles</h3>
+            <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Se inyecta dinámicamente -->
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-100 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-400 text-xs">
+            <p>&copy; 2026 Rapidito Delivery. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- CARRITO SIDEBAR (COMPLEMENTADO DEL CÓDIGO PROPORCIONADO) -->
+    <aside id="cartSidebar" class="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white z-[100] shadow-2xl flex flex-col cart-transition translate-x-full">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-2xl font-black text-slate-900">Tu carrito</h3>
+                <p class="text-sm text-slate-500 mt-1">Resumen del pedido</p>
+            </div>
+            <button id="closeCart" class="w-12 h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 transition flex items-center justify-center text-slate-600">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Contenedor de artículos -->
+        <div id="cartItems" class="flex-1 overflow-y-auto p-6 space-y-4">
+            <!-- Dinámico desde JS -->
+        </div>
+
+        <!-- Bloque de cálculo y Checkout -->
+        <div class="border-t border-slate-200 p-6 bg-slate-50">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-slate-500 font-medium">Subtotal</span>
+                <span id="subtotal" class="font-bold text-slate-900">$0.00</span>
+            </div>
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-slate-500 font-medium">Envío</span>
+                <span id="shippingCost" class="font-bold text-slate-900">$2.50</span>
+            </div>
+            <div class="flex items-center justify-between text-xl font-black mb-6">
+                <span>Total</span>
+                <span id="total" class="text-red-500">$0.00</span>
+            </div>
+            <button id="checkoutButton" class="w-full bg-red-500 hover:bg-red-600 active:scale-[0.98] transition-all text-white font-bold py-4 rounded-2xl shadow-lg shadow-red-500/20 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-receipt"></i> Finalizar pedido
+            </button>
+        </div>
+    </aside>
+
+    <!-- OVERLAY -->
+    <div id="overlay" class="hidden fixed inset-0 bg-black/50 z-50 transition-opacity duration-300"></div>
+
+    <!-- ALERT / TOAST COMPONENTE -->
+    <div id="alertBox" class="hidden fixed top-5 right-5 z-[200] bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl font-semibold flex items-center gap-3 transition-all transform scale-90 translate-y-[-10px] duration-300">
+        <!-- Contenido inyectado dinámicamente -->
+    </div>
+
+    <!-- MODAL DE ÉXITO POST-COMPRA -->
+    <div id="successModal" class="hidden fixed inset-0 bg-black/60 z-[300] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl transform scale-95 transition-all">
+            <div class="w-20 h-20 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fa-solid fa-check text-4xl"></i>
+            </div>
+            <h4 class="text-2xl font-black text-slate-900 mb-2">¡Pedido Recibido!</h4>
+            <p class="text-slate-500 text-sm mb-6">Estamos preparando tu comida. El repartidor llegará en unos minutos.</p>
+            <button onclick="closeSuccessModal()" class="w-full bg-slate-950 hover:bg-slate-900 text-white font-bold py-3.5 rounded-2xl transition">
+                Genial, seguir navegando
+            </button>
+        </div>
     </div>
 
 
-    <div id="cartItems" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+    <script>
+        // BASE DE DATOS COMPLETA DE TIENDAS Y PRODUCTOS
+        const stores = [
+            {
+                id: 1,
+                name: 'Burger folkafe',
+                category: 'Restaurantes',
+                rating: 4.9,
+                time: 20,
+                image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=1200&auto=format&fit=crop',
+                products: [
+                    {
+                        id: 101,
+                        name: 'Hamburguesa Especial',
+                        price: 7.50,
+                        desc: 'Carne premium de res, queso cheddar fundido, tocino crujiente, lechuga, tomate y salsa secreta de la casa.'
+                    },
+                    {
+                        id: 102,
+                        name: 'Papas Grandes rústicas',
+                        price: 3.50,
+                        desc: 'Papas cortadas a mano sazonadas con sal marina y pimentón ahumado.'
+                    },
+                    {
+                        id: 103,
+                        name: 'Aros de Cebolla crujientes',
+                        price: 4.25,
+                        desc: 'Deliciosos aros de cebolla rebozados y acompañados de salsa BBQ artesanal.'
+                    }
+                ]
+            },
+            {
+                id: 2,
+                name: 'Farmacia Central',
+                category: 'Farmacias',
+                rating: 4.7,
+                time: 15,
+                image: 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1200&auto=format&fit=crop',
+                products: [
+                    {
+                        id: 201,
+                        name: 'Paracetamol 500mg (10 Tab)',
+                        price: 1.20,
+                        desc: 'Eficaz analgésico e antipirético indicado para el alivio del dolor y la fiebre.'
+                    },
+                    {
+                        id: 202,
+                        name: 'Suero de Rehidratación sabor Coco',
+                        price: 1.80,
+                        desc: 'Solución electrolítica ideal para reponer líquidos perdidos rápidamente.'
+                    },
+                    {
+                        id: 203,
+                        name: 'Protector Solar FPS 50+',
+                        price: 14.90,
+                        desc: 'Fórmula ligera y resistente al agua para proteger tu piel del sol.'
+                    }
+                ]
+            },
+            {
+                id: 3,
+                name: 'Súper Don Pepe',
+                category: 'Supermercados',
+                rating: 4.8,
+                time: 35,
+                image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1200&auto=format&fit=crop',
+                products: [
+                    {
+                        id: 301,
+                        name: 'Leche Entera Premium (1L)',
+                        price: 1.10,
+                        desc: 'Leche de vaca pasteurizada enriquecida con vitaminas A y D.'
+                    },
+                    {
+                        id: 302,
+                        name: 'Pan Tajado Integral',
+                        price: 2.30,
+                        desc: 'Pan multigrano rico en fibra, sin colorantes artificiales.'
+                    },
+                    {
+                        id: 303,
+                        name: 'Café Tostado y Molido 250g',
+                        price: 4.50,
+                        desc: 'Granos seleccionados artesanalmente con aroma intenso.'
+                    }
+                ]
+            },
+            {
+                id: 4,
+                name: 'Cacao & Dulce',
+                category: 'Postres',
+                rating: 4.9,
+                time: 15,
+                image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=1200&auto=format&fit=crop',
+                products: [
+                    {
+                        id: 401,
+                        name: 'Porción Torta de Fudge',
+                        price: 4.50,
+                        desc: 'Torta húmeda de puro chocolate rellena y cubierta con abundante fudge.'
+                    },
+                    {
+                        id: 402,
+                        name: 'Caja de Macarons Surtidos (x6)',
+                        price: 8.50,
+                        desc: 'Exquisitos macarons franceses de vainilla, pistacho, fresa y chocolate.'
+                    }
+                ]
+            }
+        ];
 
+        // ESTADO DE LA APLICACIÓN
+        let cart = [];
+        let selectedStore = null;
+        let activeCategory = 'Todos';
 
-    <div class="border-t border-slate-200 p-6 bg-slate-50">
+        // ELEMENTOS DOM
+        const storesGrid = document.getElementById('storesGrid');
+        const storesView = document.getElementById('storesView');
+        const productsView = document.getElementById('productsView');
+        const productsGrid = document.getElementById('productsGrid');
+        const storesTitle = document.getElementById('storesTitle');
+        const cartSidebar = document.getElementById('cartSidebar');
+        const overlay = document.getElementById('overlay');
+        const cartItemsContainer = document.getElementById('cartItems');
+        const subtotalEl = document.getElementById('subtotal');
+        const totalEl = document.getElementById('total');
+        const cartCountBadge = document.getElementById('cartCountBadge');
+        const alertBox = document.getElementById('alertBox');
+        const successModal = document.getElementById('successModal');
 
-      <div class="flex items-center justify-between mb-3">
-        <span class="text-slate-500 font-medium">Subtotal</span>
-        <span id="subtotal" class="font-bold">$0.00</span>
-      </div>
+        // BOTONES DE ACCIÓN DEL DOM
+        const openCartBtn = document.getElementById('openCart');
+        const closeCartBtn = document.getElementById('closeCart');
+        const checkoutButton = document.getElementById('checkoutButton');
 
-      <div class="flex items-center justify-between mb-3">
-        <span class="text-slate-500 font-medium">Envío</span>
-        <span class="font-bold">$2.50</span>
-      </div>
+        // GESTIÓN DE TIENDAS Y RENDERS
+        function initApp() {
+            renderStores();
+        }
 
-      <div class="flex items-center justify-between text-xl font-black mb-6">
-        <span>Total</span>
-        <span id="total">$0.00</span>
-      </div>
+        function renderStores() {
+            storesGrid.innerHTML = '';
+            
+            const filteredStores = activeCategory === 'Todos' 
+                ? stores 
+                : stores.filter(s => s.category === activeCategory);
 
-      <button id="checkoutButton" class="w-full bg-red-500 hover:bg-red-600 transition text-white font-bold py-4 rounded-2xl shadow-lg shadow-red-500/20">
-        Finalizar pedido
-      </button>
-    </div>
-  </aside>
+            if (filteredStores.length === 0) {
+                storesGrid.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-400">
+                        <i class="fa-solid fa-store-slash text-4xl mb-3"></i>
+                        <p class="font-medium">No se encontraron tiendas en esta categoría.</p>
+                    </div>
+                `;
+                return;
+            }
 
+            filteredStores.forEach(store => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-3xl overflow-hidden border border-slate-100 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer flex flex-col h-full";
+                card.onclick = () => showStoreDetails(store);
+                
+                card.innerHTML = `
+                    <div class="relative h-44 overflow-hidden bg-slate-100">
+                        <img class="w-full h-full object-cover" src="${store.image}" alt="${store.name}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600'">
+                        <span class="absolute top-4 left-4 bg-white/95 backdrop-blur-md text-slate-800 font-bold text-xs py-1.5 px-3.5 rounded-full shadow-sm">
+                            ${store.category}
+                        </span>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-black text-lg text-slate-950">${store.name}</h3>
+                            <p class="text-xs text-slate-400 mt-1">${store.products.length} productos disponibles</p>
+                        </div>
+                        <div class="flex items-center justify-between text-xs font-bold text-slate-600 mt-4 pt-4 border-t border-slate-50">
+                            <span class="flex items-center gap-1">
+                                <i class="fa-solid fa-star text-amber-400"></i> ${store.rating}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <i class="fa-solid fa-clock text-red-500"></i> ${store.time} min
+                            </span>
+                            <span class="text-emerald-600">Envío $2.50</span>
+                        </div>
+                    </div>
+                `;
+                storesGrid.appendChild(card);
+            });
+        }
 
-  <!-- OVERLAY -->
-  <div id="overlay" class="hidden fixed inset-0 bg-black/50 z-50"></div>
-
-
-  <!-- ALERT -->
-  <div id="alertBox" class="hidden fixed top-5 right-5 z-[200] bg-black text-white px-6 py-4 rounded-2xl shadow-2xl font-semibold"></div>
-
-
-  <script>
-
-    const stores = [
-      {
-        id: 1,
-        name: 'Burger House',
-        category: 'Restaurantes',
-        rating: 4.9,
-        time: 20,
-        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=1200&auto=format&fit=crop',
-        products: [
-          {
-            id: 1,
-            name: 'Hamburguesa Especial',
-            price: 7.50
-          },
-          {
-            id: 2,
-            name: 'Papas Grandes',
-            price: 3.50
-          }
-        ]
-      },
-
-      {
-        id: 2,
-        name: 'Farmacia Central',
-        category: 'F
+        // CONTROL DE CATEGORÍAS
+        function filterCategory(category) {
+            activeCategory = category;
+            
+            // Actualizar interfaz de botones de categoría
+            const buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => {
+                if (btn.innerText.includes(category)) {
+                    btn.classList.remove('bg-white', 'text-slate-600', 'border-slate-100');
+                    btn.classList.add('bg-red-500', 'text-white', 'shadow-lg', 'shadow-red-500/20');
+                } else {
+                    btn.classList.add('bg-white', 'text-slate-600', 'border-slate-100');
+                    btn.classList.remove('bg-red-500', 'text-white', 'shadow-lg', 'shadow-red-500/2
